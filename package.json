@@ -1,11 +1,15 @@
 {
   "name": "device-tracker-server",
   "version": "1.0.0",
-  "description": "Device Tracker Server",
+  "description": "Device Tracker Server - خادم تتبع الأجهزة",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
+  "keywords": ["device", "tracker", "server"],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5"
