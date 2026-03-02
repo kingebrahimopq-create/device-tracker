@@ -1,11 +1,8 @@
-// ✅ كود الخادم الكامل
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
-
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
@@ -39,25 +36,18 @@ function decryptData(encryptedData, key) {
 }
 
 app.get('/', (req, res) => {
-  res.json({ success: true, message: '🖥️ Server is running', timestamp: new Date() });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, status: 'healthy', uptime: process.uptime() });
+  res.json({ success: true, message: 'Server Running on Replit', timestamp: new Date() });
 });
 
 app.post('/api/clients/register', (req, res) => {
-  try {    const { clientId, deviceInfo } = req.body;
-    if (!clientId) {
-      return res.status(400).json({ success: false, error: 'clientId مطلوب' });
-    }
+  try {
+    const { clientId, deviceInfo } = req.body;
+    if (!clientId) return res.status(400).json({ success: false, error: 'clientId مطلوب' });
     const deviceId = crypto.randomUUID();
     const encryptionKey = generateEncryptionKey();
     clientsDB.set(deviceId, { deviceId, clientId, encryptionKey, deviceInfo, registeredAt: new Date() });
-    console.log(`✅ جهاز جديد: ${deviceId}`);
-    res.json({ success: true, deviceId, encryptionKey, message: 'تم التسجيل بنجاح' });
+    res.json({ success: true, deviceId, encryptionKey, message: 'تم التسجيل' });
   } catch (error) {
-    console.error('❌ خطأ في التسجيل:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -65,47 +55,25 @@ app.post('/api/clients/register', (req, res) => {
 app.post('/api/clients/checkin', (req, res) => {
   try {
     const { deviceId, encryptedData } = req.body;
-    if (!deviceId || !encryptedData) {
-      return res.status(400).json({ success: false, error: 'بيانات ناقصة' });
-    }
+    if (!deviceId || !encryptedData) return res.status(400).json({ success: false, error: 'بيانات ناقصة' });
     const client = clientsDB.get(deviceId);
-    if (!client) {
-      return res.status(404).json({ success: false, error: 'الجهاز غير مسجل' });
-    }
-    const decrypted = decryptData(encryptedData, client.encryptionKey);
-    console.log(`📡 Check-in من: ${deviceId}`);
+    if (!client) return res.status(404).json({ success: false, error: 'الجهاز غير مسجل' });
+    decryptData(encryptedData, client.encryptionKey);
     client.lastCheckIn = new Date();
     clientsDB.set(deviceId, client);
     const responseData = { commands: [] };
     const encryptedResponse = encryptData(responseData, client.encryptionKey);
     res.json({ success: true, encryptedData: encryptedResponse });
   } catch (error) {
-    console.error('❌ خطأ في check-in:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/clients/report', (req, res) => {
-  try {
-    const { deviceId } = req.body;
-    console.log(`📊 تقرير من: ${deviceId}`);
-    res.json({ success: true, message: 'تم استلام التقرير' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+  res.json({ success: true, message: 'تم الاستلام' });
 });
 
-app.get('/api/devices', (req, res) => {
-  const devices = Array.from(clientsDB.values()).map(c => ({    deviceId: c.deviceId,
-    clientId: c.clientId,
-    status: c.lastCheckIn ? 'active' : 'inactive',
-    lastCheckIn: c.lastCheckIn,
-  }));
-  res.json({ success: true, count: devices.length, devices });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('Server running on port ' + PORT);
 });
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
-
-module.exports = app;
